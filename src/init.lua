@@ -5,16 +5,6 @@
 local Character = {}
 
 --// SETTINGS
-Character.V1_SETTINGS = {
-	LimitsEnabled = true,
-	MaxFrictionTorque = 0,
-	Restitution = 0,
-	TwistLimitsEnabled = true,
-	UpperAngle = 45,
-	TwistLowerAngle = 135,
-	TwistUpperAngle = -135
-}
-
 Character.RAGDOLL_V1_SETTINGS = {
 	Length = 0.25
 }
