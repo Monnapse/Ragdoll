@@ -29,6 +29,7 @@ function Character.EnableRagdollV1(Rig: Model, Humanoid: Humanoid)
 		--// Humanoid Settings
 		Humanoid.WalkSpeed = 0
 		--Humanoid.EvaluateStateMachine = false
+        Humanoid.BreakJointsOnDeath = false
 		Humanoid.AutoRotate = false
 		Humanoid.RequiresNeck = false
 
