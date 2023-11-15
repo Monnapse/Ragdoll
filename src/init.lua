@@ -5,6 +5,15 @@
 local Character = {}
 
 --// SETTINGS
+Character.V1_SETTINGS = {
+	LimitsEnabled = true,
+	MaxFrictionTorque = 0,
+	Restitution = 0,
+	TwistLimitsEnabled = true,
+	UpperAngle = 45,
+	TwistLowerAngle = 135,
+	TwistUpperAngle = -135
+}
 Character.RAGDOLL_V1_SETTINGS = {
 	Length = 0.25
 }
@@ -23,6 +32,12 @@ function Character.EnableRagdollV1(Rig: Model, Humanoid: Humanoid)
 		Humanoid.AutoRotate = false
 		Humanoid.RequiresNeck = false
 
+        --// Disable animations
+        local Animator: Animator = Humanoid:WaitForChild("Animator")
+        for i, track: AnimationTrack in pairs(Animator:GetPlayingAnimationTracks()) do
+            track:Stop()
+        end
+
 		--// Collecting Directories
 		local Torso: Part = Rig:FindFirstChild("Torso")
 		if not Torso then Torso = Rig:WaitForChild("Torso") end
@@ -32,6 +47,10 @@ function Character.EnableRagdollV1(Rig: Model, Humanoid: Humanoid)
 		if not LeftLeg then LeftLeg = Rig:WaitForChild("Left Leg") end
 		local Head: Part = Rig:FindFirstChild("Head")
 		if not Head then Head = Rig:WaitForChild("Head") end
+        local LeftArm: Part = Rig:FindFirstChild("Left Arm")
+	    if not LeftArm then LeftArm = Rig:WaitForChild("Left Arm") end
+	    local RightArm: Part = Rig:FindFirstChild("Right Arm")
+	    if not RightArm then RightArm = Rig:WaitForChild("Right Arm") end
 
 		--// Constraints
 		local RightRope: BallSocketConstraint = Instance.new("RopeConstraint", Torso)
@@ -40,10 +59,16 @@ function Character.EnableRagdollV1(Rig: Model, Humanoid: Humanoid)
 		LeftRope.Name = "LeftLegConstraint"
 		local HeadRope: BallSocketConstraint = Instance.new("RopeConstraint", Torso)
 		HeadRope.Name = "HeadConstraint"
+        local RightBallSocket: BallSocketConstraint = Instance.new("BallSocketConstraint", Torso)
+	    RightBallSocket.Name = "RightArmConstraint"
+	    local LeftBallSocket: BallSocketConstraint = Instance.new("BallSocketConstraint", Torso)
+	    LeftBallSocket.Name = "LeftArmConstraint"
 
 		ApplyProperties(RightRope, Character.RAGDOLL_V1_SETTINGS)
 		ApplyProperties(LeftRope, Character.RAGDOLL_V1_SETTINGS)
 		ApplyProperties(HeadRope, Character.RAGDOLL_V1_SETTINGS)
+        ApplyProperties(RightBallSocket, Character.V1_SETTINGS)
+	    ApplyProperties(LeftBallSocket, Character.V1_SETTINGS)
 
 		--// Attachemnts & Applying Constraints
 		local RightConstraintAttachment: Attachment = RightLeg:FindFirstChild("RightFootAttachment"):Clone()
@@ -80,6 +105,20 @@ function Character.EnableRagdollV1(Rig: Model, Humanoid: Humanoid)
 		HeadRope.Attachment0 = Torso:FindFirstChild("NeckAttachment")
 		HeadRope.Attachment1 = HeadConstraintAttachment
 
+        local RightConstraintAttachment: Attachment = RightArm:FindFirstChild("RightShoulderAttachment"):Clone()
+	    RightConstraintAttachment.Parent = RightArm
+	    RightConstraintAttachment.Name = "RightConstraintAttachment"
+	    RightConstraintAttachment.CFrame = CFrame.new(-0.5,1,0)
+	    RightBallSocket.Attachment0 = Torso:FindFirstChild("RightCollarAttachment")
+	    RightBallSocket.Attachment1 = RightConstraintAttachment
+
+	    local LeftConstraintAttachment: Attachment = LeftArm:FindFirstChild("LeftShoulderAttachment"):Clone()
+	    LeftConstraintAttachment.Parent = LeftArm
+	    LeftConstraintAttachment.Name = "LeftConstraintAttachment"
+	    LeftConstraintAttachment.CFrame = CFrame.new(0.5,1,0)
+	    LeftBallSocket.Attachment0 = Torso:FindFirstChild("LeftCollarAttachment")
+	    LeftBallSocket.Attachment1 = LeftConstraintAttachment
+
 		--// Collisions
 		local RightLegCollision: Part = RightLeg:Clone()
 		RightLegCollision.Parent = Rig
@@ -111,10 +150,34 @@ function Character.EnableRagdollV1(Rig: Model, Humanoid: Humanoid)
 		HCollision.Part0 = HeadCollision
 		HCollision.Part1 = Head
 
+        local RightArmCollision: Part = RightArm:Clone()
+	    RightArmCollision.Parent = Rig
+	    RightArmCollision.Name = "Right Arm Collision"
+	    RightArmCollision.Transparency = 1
+	    RightArmCollision.CanCollide = true
+
+	    local RACollision:Weld = Instance.new("Weld", RightArmCollision)
+	    RACollision.Part0 = RightArmCollision
+	    RACollision.Part1 = RightArm
+
+	    local LeftArmCollision: Part = LeftArm:Clone()
+	    LeftArmCollision.Parent = Rig
+	    LeftArmCollision.Name = "Left Arm Collision"
+	    LeftArmCollision.Transparency = 1
+	    LeftArmCollision.CanCollide = true
+
+	    local LACollision:Weld = Instance.new("Weld", LeftArmCollision)
+	    LACollision.Part0 = LeftArmCollision
+	    LACollision.Part1 = LeftArm
+
+
+
 		--// Disable Welds
 		Torso:FindFirstChild("Right Hip").Enabled = false
 		Torso:FindFirstChild("Left Hip").Enabled = false
 		Torso:FindFirstChild("Neck").Enabled = false
+        Torso:FindFirstChild("Right Shoulder").Enabled = false
+	    Torso:FindFirstChild("Left Shoulder").Enabled = false
 
 		Rig:SetAttribute("Ragdoll", true)
 	else
@@ -132,6 +195,8 @@ function Character.EnableRagdollV1(Rig: Model, Humanoid: Humanoid)
 		Torso:FindFirstChild("Right Hip").Enabled = false
 		Torso:FindFirstChild("Left Hip").Enabled = false
 		Torso:FindFirstChild("Neck").Enabled = false
+        Torso:FindFirstChild("Right Shoulder").Enabled = false
+	    Torso:FindFirstChild("Left Shoulder").Enabled = false
 	end
 end
 
@@ -146,11 +211,17 @@ function Character.DisableRagdollV1(Rig: Model, Humanoid: Humanoid, WalkSpeed: n
 		if not LeftLeg then LeftLeg = Rig:WaitForChild("Left Leg") end
 		local Head: Part = Rig:FindFirstChild("Head")
 		if not Head then Head = Rig:WaitForChild("Head") end
+        local LeftArm: Part = Rig:FindFirstChild("Left Arm")
+        if not LeftArm then LeftArm = Rig:WaitForChild("Left Arm") end
+        local RightArm: Part = Rig:FindFirstChild("Right Arm")
+        if not RightArm then RightArm = Rig:WaitForChild("Right Arm") end
 
 		--// Enable Welds
 		Torso:FindFirstChild("Right Hip").Enabled = true
 		Torso:FindFirstChild("Left Hip").Enabled = true
 		Torso:FindFirstChild("Neck").Enabled = true
+        Torso:FindFirstChild("Right Shoulder").Enabled = true
+	    Torso:FindFirstChild("Left Shoulder").Enabled = true
 
 		--// Humanoid Settings
 		Humanoid.WalkSpeed = WalkSpeed
